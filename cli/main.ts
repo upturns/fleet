@@ -17,7 +17,13 @@ program
   //   .option("--first", "display just the first substring")
   //   .option("-s, --separator <char>", "separator character", ",")
   .option("-s, --services <char>", "path to services folder", "./cli/services")
+  .option(
+    "-c, --contained",
+    "Use docker containers to launch core services rather than raw-executing commands.",
+    false
+  )
   .action(async (options) => {
+    console.log(options);
     const ip = await getTailscaleIP();
     console.log("IP is:", ip);
     if (ip) {
@@ -26,7 +32,11 @@ program
       const nomadArgs = generateNomadArgs(ip);
       console.log("nomad args:", nomadArgs);
 
-      const tmuxScript = generateScript(consulArgs, nomadArgs);
+      const tmuxScript = generateScript(
+        consulArgs,
+        nomadArgs,
+        options.contained
+      );
 
       fs.writeFile("start.sh", tmuxScript, (err) => {
         if (err) {
@@ -79,15 +89,27 @@ interface IConsulConfig {
   name: string;
 }
 
-function generateScript(consulArgs: string[], nomadArgs: string[]): string {
+function generateScript(
+  consulArgs: string[],
+  nomadArgs: string[],
+  useContainers: boolean
+): string {
   const consulCMD = `consul ${consulArgs.join(" ")}`;
   const nomadCMD = `sudo nomad ${nomadArgs.join(" ")}`;
+
+  const redisCMD = useContainers
+    ? `nomad job run ./nomad_jobs/redis_container.hcl`
+    : `nomad job run ./nomad_jobs/local_redis.hcl`;
+
+  const waitForRedisCMD = useContainers
+    ? `node ./dist/main.js wait docker-redis-ptc-redis.service.consul`
+    : `node ./dist/main.js wait redis-ptc-redis.service.consul`;
 
   const template = `
   #!/bin/sh
   tmux new-session -d 'sh -c "${nomadCMD.replace(/"/g, '\\"')}"'
   tmux split-window -v 'sh -c "${consulCMD.replace(/"/g, '\\"')}"'
-  tmux split-window -h 'sh -c "node ./dist/main.js wait nomad-server.service.consul" && nomad job run ./nomad_jobs/local_redis.hcl && node ./dist/main.js wait redis-ptc-redis.service.consul"'
+  tmux split-window -h 'sh -c "node ./dist/main.js wait nomad-server.service.consul" && ${redisCMD} && ${waitForRedisCMD}"'
   tmux new-window 'mutt'
   tmux -2 attach-session -d
   `;
