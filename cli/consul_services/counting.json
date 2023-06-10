@@ -1,0 +1,7 @@
+// {\"service\": {\"name\": \"counting\", \"tags\": [\"go\"], \"port\": 9001}}
+{
+  "service": {
+    "name": "postgres",
+    "port": 5432
+  }
+}
