@@ -51,7 +51,12 @@ program
   .option("-s, --services <char>", "path to services folder", "./cli/services")
   .argument("service-name")
   .action(async (service_name) => {
-    await waitForService(service_name);
+    const ip = await getTailscaleIP();
+    if (ip) {
+      await waitForService(ip, service_name);
+    } else {
+      console.error("Failed to find own IP via tailscale!");
+    }
   });
 
 program.parse();

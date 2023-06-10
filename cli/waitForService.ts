@@ -1,6 +1,9 @@
 import { exec } from "child_process";
 
-export async function waitForService(service_name: string) {
+export async function waitForService(
+  consul_address: string,
+  service_name: string
+) {
   const timeout = 3000;
   const max_attempts = 5;
 
@@ -12,7 +15,7 @@ export async function waitForService(service_name: string) {
         [
           "dig",
           "+nocmd",
-          "@100.75.213.102",
+          `@${consul_address}`,
           "-p",
           "8600",
           "+noall",
