@@ -2,6 +2,7 @@
   "name": "cli",
   "version": "1.0.0",
   "description": "",
+  "type": "commonjs",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^20.2.5",
+    "bullmq": "^3.15.4",
     "commander": "^10.0.1"
   },
   "devDependencies": {

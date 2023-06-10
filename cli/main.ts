@@ -1,6 +1,7 @@
 import { exec, spawn } from "child_process";
 import { Command } from "commander";
 import * as fs from "fs";
+import { waitForService } from "./waitForService";
 
 const program = new Command();
 
@@ -41,6 +42,18 @@ program
     // console.log(str.split(options.separator, limit));
   });
 
+program
+  .command("wait")
+  .description("Start a new node in the network")
+  //   .argument("<string>", "string to split")
+  //   .option("--first", "display just the first substring")
+  //   .option("-s, --separator <char>", "separator character", ",")
+  .option("-s, --services <char>", "path to services folder", "./cli/services")
+  .argument("service-name")
+  .action(async (service_name) => {
+    await waitForService(service_name);
+  });
+
 program.parse();
 
 // const CONSUL_CONFIG = {
@@ -69,7 +82,7 @@ function generateScript(consulArgs: string[], nomadArgs: string[]): string {
   #!/bin/sh
   tmux new-session -d 'sh -c "${nomadCMD.replace(/"/g, '\\"')}"'
   tmux split-window -v 'sh -c "${consulCMD.replace(/"/g, '\\"')}"'
-  tmux split-window -h 'sh -c "ts-node waitForService.ts nomad-server.service.consul" && nomad run ./Jobs/local_redis.hcl && ts-node waitForService.ts redis-ptc-redis.service.consul'
+  tmux split-window -h 'sh -c "node ./dist/main.js wait nomad-server.service.consul" && nomad run ./nomad_jobs/local_redis.hcl && node ./dist/main.js wait redis-ptc-redis.service.consul"'
   tmux new-window 'mutt'
   tmux -2 attach-session -d
   `;
