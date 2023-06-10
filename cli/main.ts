@@ -81,13 +81,13 @@ interface IConsulConfig {
 
 function generateScript(consulArgs: string[], nomadArgs: string[]): string {
   const consulCMD = `consul ${consulArgs.join(" ")}`;
-  const nomadCMD = `nomad ${nomadArgs.join(" ")}`;
+  const nomadCMD = `sudo nomad ${nomadArgs.join(" ")}`;
 
   const template = `
   #!/bin/sh
   tmux new-session -d 'sh -c "${nomadCMD.replace(/"/g, '\\"')}"'
   tmux split-window -v 'sh -c "${consulCMD.replace(/"/g, '\\"')}"'
-  tmux split-window -h 'sh -c "node ./dist/main.js wait nomad-server.service.consul" && nomad run ./nomad_jobs/local_redis.hcl && node ./dist/main.js wait redis-ptc-redis.service.consul"'
+  tmux split-window -h 'sh -c "node ./dist/main.js wait nomad-server.service.consul" && nomad job run ./nomad_jobs/local_redis.hcl && node ./dist/main.js wait redis-ptc-redis.service.consul"'
   tmux new-window 'mutt'
   tmux -2 attach-session -d
   `;
