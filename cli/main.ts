@@ -104,14 +104,14 @@ function generateScript(
     : `nomad job run ./nomad_jobs/local_redis.hcl`;
 
   const waitForRedisCMD = useContainers
-    ? `node ./dist/main.js wait docker-redis-ptc-redis.service.consul`
-    : `node ./dist/main.js wait redis-ptc-redis.service.consul`;
+    ? `./waitForService.sh 0.0.0.0 8600 wait docker-redis-ptc-redis.service.consul`
+    : `./waitForService.sh 0.0.0.0 8600 redis-ptc-redis.service.consul`;
 
   const template = `
   #!/bin/sh
   tmux new-session -d 'sh -c "${nomadCMD.replace(/"/g, '\\"')}"'
   tmux split-window -v 'sh -c "${consulCMD.replace(/"/g, '\\"')}"'
-  tmux split-window -h 'sh -c "node ./dist/main.js wait nomad-server.service.consul && ${redisCMD} && ${waitForRedisCMD}"'
+  tmux split-window -h 'sh -c "./waitForService.sh 0.0.0.0 8600 nomad-server.service.consul && ${redisCMD} && ${waitForRedisCMD}"'
   tmux new-window 'mutt'
   tmux -2 attach-session -d
   `;
