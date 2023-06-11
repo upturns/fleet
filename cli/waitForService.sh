@@ -6,8 +6,8 @@ COUNT=0
 R="$(dig @"$1" -p "$2" "$3" +noall +nocmd +answer | sed 's/\t/ /g' | rev | cut -d ' ' -f 1 | rev | tail -n 1)"
 
 echo "!"
-until [ "$R" != "+cmd" ]; do
-    printf "Waiting for [%s] (attempt %s)" "$3" "$COUNT" 
+until [ "$R" != "+cmd" ] && [ ! -z "$R" ]; do
+    printf "Waiting for [%s] (attempt %s)" "$3" "$COUNT"
     COUNT=$((COUNT+1))
 
     if [ ${COUNT} -gt ${MAX_ATTEMPTS} ]; then
