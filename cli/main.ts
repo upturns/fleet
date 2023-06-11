@@ -13,10 +13,12 @@ program
 program
   .command("run")
   .description("Start a new node in the network")
-  //   .argument("<string>", "string to split")
-  //   .option("--first", "display just the first substring")
-  //   .option("-s, --separator <char>", "separator character", ",")
-  .option("-s, --services <char>", "path to services folder", "./cli/services")
+  .option("-s, --servers <char>", "servers to connect to", "")
+  .option(
+    "-tvpn, --tailscale",
+    "Use the tailscale CLI to determine this machine's IP.",
+    false
+  )
   .option(
     "-c, --contained",
     "Use docker containers to launch core services rather than raw-executing commands.",
@@ -24,10 +26,10 @@ program
   )
   .action(async (options) => {
     console.log(options);
-    const ip = await getTailscaleIP();
+    const ip = options.tailscale ? await getTailscaleIP() : "xxx";
     console.log("IP is:", ip);
     if (ip) {
-      const consulArgs = generateConsulArgs(ip);
+      const consulArgs = generateConsulArgs(ip, options.servers.split(","));
       console.log("consul args:", consulArgs);
       const nomadArgs = generateNomadArgs(ip);
       console.log("nomad args:", nomadArgs);
@@ -109,7 +111,7 @@ function generateScript(
   #!/bin/sh
   tmux new-session -d 'sh -c "${nomadCMD.replace(/"/g, '\\"')}"'
   tmux split-window -v 'sh -c "${consulCMD.replace(/"/g, '\\"')}"'
-  tmux split-window -h 'sh -c "node ./dist/main.js wait nomad-server.service.consul" && ${redisCMD} && ${waitForRedisCMD}"'
+  tmux split-window -h 'sh -c "node ./dist/main.js wait nomad-server.service.consul && ${redisCMD} && ${waitForRedisCMD}"'
   tmux new-window 'mutt'
   tmux -2 attach-session -d
   `;
@@ -149,18 +151,20 @@ async function getTailscaleIP(): Promise<string | null> {
   });
 }
 
-function generateConsulArgs(ip: string): string[] {
+function generateConsulArgs(ip: string, servers: string[]): string[] {
   const config: IConsulConfig = {
     server: true,
     client: true,
-    name: "max_mbp",
+    name: "local1",
     config_dir: "./services",
     data_dir: "/tmp/consul/data",
   };
+
+  const bootstrap = servers.length === 0;
+
   let args: string[] = [
     "agent",
     "-server",
-    "--bootstrap-expect=1",
     "-ui",
     `-node=${config.name}`,
     "--bind",
@@ -171,6 +175,13 @@ function generateConsulArgs(ip: string): string[] {
     `${ip}`,
     `-data-dir="/tmp/consul/data"`,
   ];
+
+  if (bootstrap) {
+    args.push("--bootstrap-expect=1");
+  } else {
+    args.push("-retry-join", servers[0]);
+  }
+
   return args;
 }
 
