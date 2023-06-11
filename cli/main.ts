@@ -29,7 +29,10 @@ program
     const ip = options.tailscale ? await getTailscaleIP() : "xxx";
     console.log("IP is:", ip);
     if (ip) {
-      const consulArgs = generateConsulArgs(ip, options.servers.split(","));
+      const consulArgs = generateConsulArgs(
+        ip,
+        options.servers.split(",").filter((x: string) => x.trim() !== "")
+      );
       console.log("consul args:", consulArgs);
       const nomadArgs = generateNomadArgs(ip);
       console.log("nomad args:", nomadArgs);
