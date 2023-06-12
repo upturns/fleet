@@ -5,9 +5,12 @@ bind_addr = "0.0.0.0" # the default
 
 advertise {
   # Defaults to the first private IP address.
-  http = "100.75.213.102"
-  rpc  = "100.75.213.102"
-  serf = "100.75.213.102"
+  // http = "100.75.213.102"
+  // rpc  = "100.75.213.102"
+  // serf = "100.75.213.102"
+  // http = "100.116.113.42"
+  // rpc  = "100.116.113.42"
+  // serf = "100.116.113.42"
 }
 
 server {

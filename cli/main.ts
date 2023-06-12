@@ -24,9 +24,15 @@ program
     "Use docker containers to launch core services rather than raw-executing commands.",
     false
   )
+  .option(
+    "-a, --address <char>",
+    "Specify the address this node should be reached at.",
+    undefined
+  )
   .action(async (options) => {
     console.log(options);
-    const ip = options.tailscale ? await getTailscaleIP() : "xxx";
+    const ip =
+      options.address || (options.tailscale ? await getTailscaleIP() : null);
     console.log("IP is:", ip);
     if (ip) {
       const consulArgs = generateConsulArgs(

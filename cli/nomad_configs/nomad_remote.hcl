@@ -11,6 +11,11 @@ server {
 
 client {
   enabled = true
+  host_volume "agent" {
+    // path      = "/home/ec2-user/fleet/cli"
+    path      = "/Users/max/Documents/fleet/agent"
+    read_only = true
+  }
 }
 
 plugin "raw_exec" {
