@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Cont
 
 usage() { echo "Usage: $0 [-s <45|90>] [-p <string>] [-a <string>] [-c <bool>]" 1>&2; exit 1; }
 
@@ -27,16 +26,12 @@ while getopts ":n:s:a:c" o; do
 done
 shift $((OPTIND-1))
 
-# if [ -z "${s}" ] || [ -z "${p}" ]; then
-
 
 echo "s = ${s}"
 echo "n = ${n}"
 echo "a = ${a}"
 echo "c = ${c}"
 
-
-# consul agent -dev;
 
 NOMAD_CONFIG_REMOTE="./nomad_configs/nomad_remote.hcl"
 CONSUL_ADVERTISE="100.75.213.102"
@@ -46,29 +41,21 @@ CONSUL_NODE_NAME=$n
 NOMAD_SERVICE_NAME="nomad-server.service.consul"
 REDIS_SERVICE_NAME="redis-ptc-redis.service.consul"
 REDIS_JOB_SPEC="./nomad_jobs/local_redis.hcl"
+AGENT_JOB_SPEC="./nomad_jobs/agent_local.hcl"
 
-CONSUL_EXISTING_SERVER="xxx"
 
 CONSUL_CMD="consul agent -server -ui -node=$CONSUL_NODE_NAME --bind 0.0.0.0 --client 0.0.0.0 --advertise $CONSUL_ADVERTISE -data-dir=$CONSUL_DATA_DIR"
 
 
-
-# if [ -z "${s}" ]; then
-#     usage
-# fi
 if [ -z "${s}" ] ; then
     CONSUL_CMD="$CONSUL_CMD --bootstrap-expect=1"
 else
     CONSUL_CMD="$CONSUL_CMD -retry-join=$s"
 fi;
 
-# if [ $c = 1 ] ; then
-#     CONSUL_CMD="$CONSUL_CMD -retry-join=$CONSUL_EXISTING_SERVER"
-# fi;
-
 NOMAD_CMD="sudo nomad agent --config=$NOMAD_CONFIG_REMOTE"
 
-INIT_SERVICES_CMD="./waitForService.sh 0.0.0.0 8600 $NOMAD_SERVICE_NAME && nomad job run $REDIS_JOB_SPEC && ./waitForServices.sh 0.0.0.0 8600 $REDIS_SERVICE_NAME"
+INIT_SERVICES_CMD="./waitForService.sh 0.0.0.0 8600 $NOMAD_SERVICE_NAME && nomad job run $REDIS_JOB_SPEC && ./waitForServices.sh 0.0.0.0 8600 $REDIS_SERVICE_NAME  && nomad job run $AGENT_JOB_SPEC "
 
 
 # TAILSCALE_PATH="$(which tailscale)"
@@ -79,9 +66,9 @@ INIT_SERVICES_CMD="./waitForService.sh 0.0.0.0 8600 $NOMAD_SERVICE_NAME && nomad
 
 
 # echo "$V"
-tmux new-session -d $CONSUL_CMD
-tmux split-window -v $NOMAD_CMD
-tmux split-window -h $INIT_SERVICES_CMD
+tmux new-session -d "$CONSUL_CMD"
+tmux split-window -v "$NOMAD_CMD"
+tmux split-window -h "$INIT_SERVICES_CMD"
 tmux new-window 'mutt'
 tmux -2 attach-session -d
 

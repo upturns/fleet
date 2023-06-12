@@ -12,3 +12,7 @@ source .nvm_profile
 # Install Node 19
 
 nvm install 19
+
+# Update NPM
+
+npm install -g npm
