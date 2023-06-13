@@ -34,6 +34,6 @@ do
     mem="$(echo "$stats" | cut -d ' ' -f 4)"
     cmd="$(echo "$stats" | cut -d ' ' -f 11-)"
 
-    etcdctl put "$ADVERTISE_IP/$address" "$pname" 
+    etcdctl put "service/$ADVERTISE_IP/$address" "$pname" 
 
 done < <(printf '%s\n' "$var")
